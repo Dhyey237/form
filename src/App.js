@@ -5,6 +5,7 @@ const App = () => {
   const [students, setStudents] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [studentsPerPage] = useState(5);
+  const [editingStudentId, setEditingStudentId] = useState(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -59,9 +60,20 @@ const App = () => {
     const marks = Number(formData.marks);
     const pass = marks > 35;
 
-    // Add the student to the students array
-    const newStudent = { ...formData, pass };
-    setStudents([...students, newStudent]);
+    if (editingStudentId !== null) {
+      // Edit existing student
+      const updatedStudents = students.map((student) =>
+        student.id === editingStudentId
+          ? { ...formData, pass, id: student.id }
+          : student
+      );
+      setStudents(updatedStudents);
+      setEditingStudentId(null);
+    } else {
+      // Add new student
+      const newStudent = { ...formData, pass, id: generateId() };
+      setStudents([...students, newStudent]);
+    }
 
     // Clear the form after submission
     setFormData({
@@ -71,6 +83,16 @@ const App = () => {
       marks: "",
       pass: false,
     });
+  };
+
+  const handleEdit = (student) => {
+    setFormData(student);
+    setEditingStudentId(student.id);
+  };
+
+  const handleDelete = (student) => {
+    const updatedStudents = students.filter((s) => s.id !== student.id);
+    setStudents(updatedStudents);
   };
 
   const validateEmail = (email) => {
@@ -95,6 +117,11 @@ const App = () => {
     setCurrentPage(pageNumber);
   };
 
+  const generateId = () => {
+    // Generate a random ID (for demonstration purposes)
+    return Math.floor(Math.random() * 100000);
+  };
+
   return (
     <div className="app-container">
       <h1>Student Information List</h1>
@@ -106,6 +133,7 @@ const App = () => {
             <th>Phone</th>
             <th>Marks</th>
             <th>Pass/Fail</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -116,6 +144,20 @@ const App = () => {
               <td>{student.phone}</td>
               <td>{student.marks}</td>
               <td>{student.pass ? "Pass" : "Fail"}</td>
+              <td>
+                <button
+                  className="edit-button"
+                  onClick={() => handleEdit(student)}
+                >
+                  Edit
+                </button>
+                <button
+                  className="delete-button"
+                  onClick={() => handleDelete(student)}
+                >
+                  Delete
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -133,6 +175,7 @@ const App = () => {
         formData={formData}
         handleInputChange={handleInputChange}
         handleSubmit={handleSubmit}
+        editingStudentId={editingStudentId}
       />
     </div>
   );
@@ -156,14 +199,22 @@ const Pagination = ({ studentsPerPage, totalStudents, paginate }) => {
   );
 };
 
-const StudentForm = ({ formData, handleInputChange, handleSubmit }) => {
+const StudentForm = ({
+  formData,
+  handleInputChange,
+  handleSubmit,
+  editingStudentId,
+}) => {
   return (
     <div className="form-container">
-      <h2>Create/Edit Student Form</h2>
+      <h2 className="form-title">
+        {editingStudentId ? "Edit Student" : "Create Student"}
+      </h2>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label>Name:</label>
+          <label className="form-label">Name:</label>
           <input
+            className="form-input"
             type="text"
             name="name"
             value={formData.name}
@@ -171,8 +222,9 @@ const StudentForm = ({ formData, handleInputChange, handleSubmit }) => {
           />
         </div>
         <div className="form-group">
-          <label>Email:</label>
+          <label className="form-label">Email:</label>
           <input
+            className="form-input"
             type="email"
             name="email"
             value={formData.email}
@@ -180,8 +232,9 @@ const StudentForm = ({ formData, handleInputChange, handleSubmit }) => {
           />
         </div>
         <div className="form-group">
-          <label>Phone:</label>
+          <label className="form-label">Phone:</label>
           <input
+            className="form-input"
             type="text"
             name="phone"
             value={formData.phone}
@@ -189,8 +242,9 @@ const StudentForm = ({ formData, handleInputChange, handleSubmit }) => {
           />
         </div>
         <div className="form-group">
-          <label>Marks:</label>
+          <label className="form-label">Marks:</label>
           <input
+            className="form-input"
             type="text"
             name="marks"
             value={formData.marks}
@@ -198,15 +252,18 @@ const StudentForm = ({ formData, handleInputChange, handleSubmit }) => {
           />
         </div>
         <div className="form-group">
-          <label>Pass/Fail:</label>
+          <label className="form-label">Pass/Fail:</label>
           <input
+            className="form-checkbox"
             type="checkbox"
             name="pass"
             checked={formData.pass}
             onChange={handleInputChange}
           />
         </div>
-        <button type="submit">Submit</button>
+        <button className="form-button" type="submit">
+          {editingStudentId ? "Update" : "Submit"}
+        </button>
       </form>
     </div>
   );
